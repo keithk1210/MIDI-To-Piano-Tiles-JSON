@@ -1,3 +1,4 @@
+from turtle import position
 import pygame
 import mido
 from resources import *
@@ -5,14 +6,15 @@ from processing import *
 from utils import roundToMultiple
 
 class Song:
-    def __init__(self,timeSignature,tempo,name):
+    def __init__(self,timeSignature,tempo,name,has_pickup,pickup_duration):
         self.timeSignature = timeSignature
         self.tempo = tempo
-        self.measuresReadable = []
+        self.measures = []
         self.chordsReadable = []
         self.chords = []
         self.name = name
-        self.measures = 0
+        self.has_pickup = has_pickup
+        self.pickup_duration = pickup_duration
 
     def writeChordsReadable(self):
         for i in range(0,len(self.chords)):
@@ -24,13 +26,16 @@ class Song:
             self.chordsReadable.append(notesList)
     def addMeasure(self):
         self.measures += 1
-    def createMeasuresReadable(self):
+    def createMeasures(self):
         self.writeChordsReadable()
         i = 0
         while i < len(self.chordsReadable):
             list = []
             sumBeats = 0.0
-            while i < len(self.chordsReadable) and sumBeats < 1:
+            measure_value = (self.timeSignature[0]/self.timeSignature[1]) #how many beats in one measure = top number of time sig/lower number of time sig
+            if self.has_pickup and len(self.measures) == 0:
+                sumBeats = measure_value - self.pickup_duration
+            while i < len(self.chordsReadable) and sumBeats < measure_value:
                 #print("sumbeats %f i %d" % (sumBeats,i))
                 
                 if i < len(self.chordsReadable):
@@ -40,28 +45,33 @@ class Song:
                         sumBeats += self.chordsReadable[i][0]
                     
                 i += 1
-            self.measuresReadable.append(Measure(list))
+            self.measures.append(Measure(list,len(self.measures)+1))
     def createChords(self,mid):
         for msg in mid:
             if not msg.is_meta and msg.type == "note_on" or msg.type == "note_off":
                 if "note" in msg.dict():
                     midiNum = msg.dict()['note']
                     note = Note(midiNum)
-                    duration = roundToMultiple((mido.second2tick(msg.time,mid.ticks_per_beat,self.tempo)/mid.ticks_per_beat)/self.timeSignature[1],1/(self.timeSignature[1]*2)) #rounds to multiple of an eighth note
+                    duration = roundToMultiple((mido.second2tick(msg.time,mid.ticks_per_beat,self.tempo)/mid.ticks_per_beat)/self.timeSignature[1],1/(self.timeSignature[1]*4)) #rounds to multiple of an eighth note
+                    print("%s %f %s" % (msg.dict(),duration,note.noteName))
                     if duration > 0:
-                        if msg.type == "note_on":
+                        if msg.type == "note_on": #if it is a new note and  the time between the last msg is greater than zero, this indicates a new chord
                             self.chords.append(Chord([note],duration))
-                        elif msg.type == "note_off":
+                        elif msg.type == "note_off": #if its a note off, this also indicates a new chord, but we have no harmonic info about it yet
                             if len(self.chords) == 0:
                                 self.chords.append(Chord([note],duration))
                             else:
                                 self.chords.append(Chord([],duration))
-                    elif msg.type == "note_on" and duration <= 0:
+                    elif msg.type == "note_on" and duration <= 0: #if its a new note and the time between the last message is 0, this indicates that we are still on the same chord. We add the note to the current chord.
                         lastIndex = len(self.chords) - 1
                         if lastIndex >= 0:
                             self.chords[lastIndex].notes += [note]
                         elif lastIndex < 0:
                             self.chords.append(Chord([note],1))
+            else: #for some reasons there are sometimes meta messages in between note_on and note_off msgs that indicate how much time has passed. These have no harmonic information but indicate that a new chord has begun.
+                duration = roundToMultiple((mido.second2tick(msg.time,mid.ticks_per_beat,self.tempo)/mid.ticks_per_beat)/self.timeSignature[1],1/(self.timeSignature[1]*4)) #rounds to multiple of an eighth note
+                if duration > 0:
+                    self.chords.append(Chord([],duration))
 
 class Note:
     def __init__(self,midiNum):
@@ -105,8 +115,9 @@ class Chord:
         self.notes = notes
         self.duration = duration
 class Measure:
-    def __init__(self,chordsReadable):
+    def __init__(self,chordsReadable,positionInSong):
         self.chordsReadable = chordsReadable
+        self.positionInSong = positionInSong
 
 #GUI objects
 
