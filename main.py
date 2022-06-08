@@ -93,7 +93,6 @@ buttonBox = ""
 while buttonBox != "Quit":
     buttonBox = easygui.buttonbox(msg=measuresDisplay[screen.currentMeasure],choices=button_list,title="JSON preview")
     if buttonBox == "Next":
-        print("in")
         if screen.currentMeasure + 1 < len(measuresDisplay):
             screen.nextMeasure()
     elif buttonBox == "Previous":

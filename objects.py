@@ -53,7 +53,7 @@ class Song:
                     midiNum = msg.dict()['note']
                     note = Note(midiNum)
                     duration = roundToMultiple((mido.second2tick(msg.time,mid.ticks_per_beat,self.tempo)/mid.ticks_per_beat)/self.timeSignature[1],1/(self.timeSignature[1]*4)) #rounds to multiple of an eighth note
-                    print("%s %f %s" % (msg.dict(),duration,note.noteName))
+                    #print("%s %f %s" % (msg.dict(),duration,note.noteName))
                     if duration > 0:
                         if msg.type == "note_on": #if it is a new note and  the time between the last msg is greater than zero, this indicates a new chord
                             self.chords.append(Chord([note],duration))
