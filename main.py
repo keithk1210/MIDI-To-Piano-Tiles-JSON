@@ -7,8 +7,8 @@ from objects import *
 import pygame
 import easygui
 
-#TODO
-#add user-inputted time signatures
+#TO do
+#make it work with 3/8
 
 #MAYBE_DO
 #ask the user: What is the shortest note value in this song? 

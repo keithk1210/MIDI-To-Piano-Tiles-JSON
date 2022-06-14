@@ -47,13 +47,18 @@ class Song:
                 i += 1
             self.measures.append(Measure(list,len(self.measures)+1))
     def createChords(self,mid):
+        with open("output.txt","w") as f:
+            f.write("hello")
+        f = open("output.txt","a")
         for msg in mid:
             if not msg.is_meta and msg.type == "note_on" or msg.type == "note_off":
                 if "note" in msg.dict():
                     midiNum = msg.dict()['note']
                     note = Note(midiNum)
-                    duration = roundToMultiple((mido.second2tick(msg.time,mid.ticks_per_beat,self.tempo)/mid.ticks_per_beat)/self.timeSignature[1],1/(self.timeSignature[1]*4)) #rounds to multiple of an eighth note
-                    #print("%s %f %s" % (msg.dict(),duration,note.noteName))
+                    duration_in_beats = mido.second2tick(msg.time,mid.ticks_per_beat,self.tempo)/mid.ticks_per_beat
+                    duration_pre_round = duration_in_beats/self.timeSignature[1]
+                    duration = roundToMultiple(duration_in_beats/self.timeSignature[1],1/(self.timeSignature[1]*4)) #rounds to multiple of an eighth note
+                    f.write("%s %s duration = %f duration in beats = %f duration unrounded = %f\n" % (msg.dict(),note.noteName,duration,duration_in_beats,duration_pre_round))
                     if duration > 0:
                         if msg.type == "note_on": #if it is a new note and  the time between the last msg is greater than zero, this indicates a new chord
                             self.chords.append(Chord([note],duration))
@@ -70,6 +75,7 @@ class Song:
                             self.chords.append(Chord([note],1))
             else: #for some reasons there are sometimes meta messages in between note_on and note_off msgs that indicate how much time has passed. These have no harmonic information but indicate that a new chord has begun.
                 duration = roundToMultiple((mido.second2tick(msg.time,mid.ticks_per_beat,self.tempo)/mid.ticks_per_beat)/self.timeSignature[1],1/(self.timeSignature[1]*4)) #rounds to multiple of an eighth note
+                f.write("%s\n" % (msg.dict()))
                 if duration > 0:
                     self.chords.append(Chord([],duration))
 
@@ -98,6 +104,8 @@ class Note:
             str += "C#"
         elif remainder == 5:
             str += "D"
+        elif remainder == 6:
+            str += "D#"
         elif remainder == 7:
             str += "E"
         elif remainder == 8:
@@ -107,7 +115,7 @@ class Note:
         elif remainder == 10:
             str += "G"
         elif remainder == 11:
-            str += "A"
+            str += "G#"
         return "%s%d" % (str,octave)
 
 class Chord:
