@@ -11,7 +11,8 @@ import easygui
 #make it work with 3/8
 
 #MAYBE_DO
-#ask the user: What is the shortest note value in this song? 
+#ask the user: What is the shortest note value in this song? (aka quantization)
+#figure out how to make moonlight sonata movement one work
 
 button_list = ("Create JSON", "Open JSON")
 
@@ -36,7 +37,7 @@ if create_mode:
     songName = easygui.enterbox("Enter the name of the JSON file you would like to create",title="Enter text")
     pickup = easygui.ynbox("Does this song have a pickup/anacrusis? \n(Does it start on beat other than beat 1?)")
     if pickup:
-        pickup_amount = easygui.enterbox("How many beats is the pickup? \n(Enter this as a decimal - i.e. and eigth note in 4/4 is worth .125 beats)")
+        pickup_amount = easygui.enterbox("How many beats is the pickup? \n(Enter this as a decimal - i.e. and eigth note in 4/4 is worth .125 beats, a sixteenth note in 3/8 is worth .5 beats. In other words, the rhythmic value that gets the beat is 1, and everything else is a fraciton of that.)")
     time_signature_str = easygui.enterbox("What is this song's time signature? (Enter two digits separated by a comma)")
     if pickup:
         song = createSong(midi,songName,pickup,time_signature_str,float(pickup_amount))

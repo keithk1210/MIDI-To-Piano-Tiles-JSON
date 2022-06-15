@@ -22,7 +22,7 @@ def createSong(midi,name,has_pickup,time_signature_string,pickup_duration=None):
 
 def writeJSON(song):
     measuresSerializable = []
-    info_serializable = [["Tempo",mido.tempo2bpm(song.tempo)],["Time Signature",song.timeSignature],"Has Pickup",song.has_pickup]
+    info_serializable = [["Tempo",mido.tempo2bpm(song.tempo)],["Time Signature",song.time_signature],"Has Pickup",song.has_pickup]
     for i in range(0,len(song.measures)):
         measuresSerializable.append(["Measure %d/%d" % (song.measures[i].positionInSong,len(song.measures))] + song.measures[i].chordsReadable)
     dictionary = {
