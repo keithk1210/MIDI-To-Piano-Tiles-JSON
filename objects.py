@@ -3,10 +3,10 @@ import pygame
 import mido
 from resources import *
 from processing import *
-from utils import roundToMultiple
+from utils import quantize
 
 class Song:
-    def __init__(self,time_signature,tempo,name,has_pickup,pickup_duration):
+    def __init__(self,time_signature,tempo,name,has_pickup,quantization,pickup_duration=None):
         self.time_signature = time_signature
         self.tempo = tempo
         self.measures = []
@@ -15,6 +15,11 @@ class Song:
         self.name = name
         self.has_pickup = has_pickup
         self.pickup_duration = pickup_duration
+        self.quantization = float(quantization[0]) / float(quantization[2:quantization.index(" ")])
+        print(quantization)
+        print("quantization %f" % (self.quantization))
+
+        
 
     def writeChordsReadable(self):
         for i in range(0,len(self.chords)):
@@ -46,16 +51,16 @@ class Song:
                 i += 1
             self.measures.append(Measure(list,len(self.measures)+1))
     def createChords(self,mid):
-        with open("output.txt","w") as f:
+        with open(f"text_files/{self.name}.txt","w") as f:
             f.write("")
-        f = open("output.txt","a")
+        f = open(f"text_files/{self.name}.txt","a")
         for msg in mid:
             if not msg.is_meta and msg.type == "note_on" or msg.type == "note_off":
                 if "note" in msg.dict():
                     midiNum = msg.dict()['note']
                     note = Note(midiNum)
                     ticks_per_beat = mid.ticks_per_beat * (4/self.time_signature[1]) #This might have to be adjusted for songs in 3
-                    duration_in_beats = mido.second2tick(msg.time,mid.ticks_per_beat,self.tempo)/ticks_per_beat
+                    duration_in_beats = quantize(mido.second2tick(msg.time,mid.ticks_per_beat,self.tempo)/ticks_per_beat,self.quantization)
                     #duration_pre_round = duration_in_beats/self.time_signature[1]
                     #duration = roundToMultiple(duration_in_beats/self.time_signature[1],1/(self.time_signature[1]*4)) #rounds to multiple of an eighth note
                     f.write("%s %s duration in beats = %f\n" % (msg.dict(),note.noteName,duration_in_beats))
@@ -75,7 +80,7 @@ class Song:
                             self.chords.append(Chord([note],1))
             else: #for some reasons there are sometimes meta messages in between note_on and note_off msgs that indicate how much time has passed. These have no harmonic information but indicate that a new chord has begun.
                 ticks_per_beat = mid.ticks_per_beat * (4/self.time_signature[1]) #This might have to be adjusted for songs in 3
-                duration_in_beats = mido.second2tick(msg.time,mid.ticks_per_beat,self.tempo)/ticks_per_beat
+                duration_in_beats = quantize(mido.second2tick(msg.time,mid.ticks_per_beat,self.tempo)/ticks_per_beat,self.quantization)
                 #duration = roundToMultiple((mido.second2tick(msg.time,mid.ticks_per_beat,self.tempo)/mid.ticks_per_beat)/self.time_signature[1],1/(self.time_signature[1]*4)) #rounds to multiple of an eighth note
                 f.write("%s\n" % (msg.dict()))
                 if duration_in_beats > 0:

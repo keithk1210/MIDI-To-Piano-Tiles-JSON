@@ -39,10 +39,11 @@ if create_mode:
     if pickup:
         pickup_amount = easygui.enterbox("How many beats is the pickup? \n(Enter this as a decimal - i.e. and eigth note in 4/4 is worth .125 beats, a sixteenth note in 3/8 is worth .5 beats. In other words, the rhythmic value that gets the beat is 1, and everything else is a fraciton of that.)")
     time_signature_str = easygui.enterbox("What is this song's time signature? (Enter two digits separated by a comma)")
+    quantization = easygui.choicebox(msg="What is the quantization for this song?",choices=["1/4 Note","1/8 Note","1/16 note","1/32 note","1/64 note"])
     if pickup:
-        song = createSong(midi,songName,pickup,time_signature_str,float(pickup_amount))
+        song = createSong(midi,songName,pickup,time_signature_str,quantization,float(pickup_amount))
     else:
-        song = createSong(midi,songName,pickup,time_signature_str)
+        song = createSong(midi,songName,pickup,time_signature_str,quantization)
     song.createChords(midi)
     song.createMeasures()
 

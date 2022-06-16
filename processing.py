@@ -2,14 +2,13 @@ import json
 from objects import Song
 import mido
 
-from utils import roundToMultiple
 
 
 
 def myround(x, base=5):
     return int(base * round(float(x)/base))
 
-def createSong(midi,name,has_pickup,time_signature_string,pickup_duration=None):
+def createSong(midi,name,has_pickup,time_signature_string,quantization,pickup_duration=None):
     tempo = 0
     time_signature_list = time_signature_string.split(",")
     timeSignature = (int(time_signature_list[0]),int(time_signature_list[1]))
@@ -18,7 +17,7 @@ def createSong(midi,name,has_pickup,time_signature_string,pickup_duration=None):
         if msg.is_meta:
             if msg.type == "set_tempo":
                 tempo = msg.dict()['tempo']
-    return Song(timeSignature,tempo,name,has_pickup,pickup_duration)
+    return Song(timeSignature,tempo,name,has_pickup,quantization,pickup_duration)
 
 def writeJSON(song):
     measuresSerializable = []
